@@ -8,6 +8,7 @@ const register = asyncHandler(async (req, res) => {
       success: false,
       mes: "Missing inputs",
     });
+
   const response = await User.create(req.body);
   return res.status(200).json({
     success: response ? true : false,
