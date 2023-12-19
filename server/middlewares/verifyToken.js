@@ -3,7 +3,7 @@ const asyncHandler = require("express-async-handler");
 
 const verifyAccessToken = asyncHandler(async (req, res, next) => {
   // Check if the authorization header exists
-  if (req.headers.authorization.startsWith("Bearer")) {
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     const token = req.headers.authorization.split(" ")[1];
     // Verify the JWT token
     jwt.verify(token, process.env.JWT_SECRET, (err, decode) => {
@@ -22,7 +22,17 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
     });
   }
 });
+const isAdmin = asyncHandler((req,res,next) => {
+  const {role} = req.user
+  if (role !== 'admin')
+  return res.status(401).json({
+    success: false,
+    mes:'REQUIRE ADMIN ROLE'
+  })
+  next()
+})
 
 module.exports = {
   verifyAccessToken,
+  isAdmin
 };

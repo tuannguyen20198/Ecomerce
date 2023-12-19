@@ -1,10 +1,12 @@
 const User = require("../models/user");
 const asyncHandler = require("express-async-handler");
+const crypto = require("crypto")
 const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../middlewares/jwt");
 const jwt = require("jsonwebtoken");
+const sendMail = require("../utils/sendMail");
 
 const register = asyncHandler(async (req, res) => {
   const {email, password, firstname, lastname} = req.body;
@@ -38,15 +40,15 @@ const login = asyncHandler(async (req, res) => {
   const response = await User.findOne({email});
   if (response && (await response.isCorrectPassword(password))) {
     //Tách password và role ra khỏi response
-    const {password, role, ...userData} = response.toObject();
+    const {password, role, refreshToken, ...userData} = response.toObject();
     //Tạo access token
     const accessToken = generateAccessToken(response._id, role);
     //Tạo refesh token
-    const refreshToken = generateRefreshToken(response._id);
+    const newRefreshToken = generateRefreshToken(response._id);
     // Luu refesh token vào database
-    await User.findByIdAndUpdate(response._id, {refreshToken}, {new: true});
+    await User.findByIdAndUpdate(response._id, {refreshToken:newRefreshToken}, {new: true});
     // Luu refesh token vào cookie
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -112,10 +114,64 @@ const logout = asyncHandler(async (req, res) => {
   });
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+  const {email} = req.query
+  if (!email) throw new Error('Missing email')
+  const user = await User.findOne({email})
+  if (!user) throw new Error('User not found')
+  const resetToken = user.createPasswordChangeToken()
+  await user.save()
+  
+  const html = `Xin vui lòng click và link dưới đây để thay đổi mật khẩu của bạ.Link này sẽ hết hẹn sau 15 phút kể từ bây giờ.crypto
+  <a href=${process.env.URL_SERVER}/api/user/reset-password/${resetToken}>Click here</a>`
+  const data = {
+    email,
+    html
+  }
+  const rs = await sendMail(data)
+  return res.status(200).json({
+    success: true,
+    rs
+  })
+});
+const resetPassword = asyncHandler(async (req, res) => {
+  const { password, token } = req.body;
+  if (!password || !token) throw new Error("Missing inputs");
+  const passwordResetToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+  const user = await User.findOne({
+    passwordResetToken,
+    passwordResetExpire: { $gt: Date.now() },
+  });
+  if (!user) throw new Error("Invalid reset token");
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordChangedAt = Date.now();
+  user.passwordResetExpire = undefined;
+  await user.save();
+  return res.status(200).json({
+    success: user ? true : false,
+    mes: user ? "Updated password" : "Something went wrong",
+  });
+});
+const getUsers = asyncHandler(async(req,res) =>{
+  const response = await User.find()
+  return res.status(200).json({
+    success: response ? true : false,
+    users: response
+
+  })
+})
+
 module.exports = {
   register,
   login,
   getCurrent,
+  getUsers,
   refreshAccessToken,
   logout,
+  forgotPassword,
+  resetPassword
 };
