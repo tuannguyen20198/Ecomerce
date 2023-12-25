@@ -1,3 +1,4 @@
+const { response } = require('express');
 const Product = require('../models/product'); // Erase if already required
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
@@ -20,13 +21,100 @@ const getProduct = asyncHandler(async (req, res) => {
         productData: product ? product : 'Cannot get product',
     });
 });
-// Filtering,sorting & pagination
+// Filtering, sorting & pagination
+// const getProducts = asyncHandler(async (req, res) => {
+//     const queries = { ...req.query };
+//     const excludeFields = ['limit', 'sort', 'page', 'fields'];
+//     excludeFields.forEach((el) => delete queries[el]);
+
+//     let queryString = JSON.stringify(queries);
+//     queryString = queryString.replace(
+//         /\b(gte|gt|lt|lte)\b/g,
+//         (matchedEl) => `$${matchedEl}`
+//     );
+//     const formattedQueries = JSON.parse(queryString);
+
+//     // Filtering
+//     if (queries?.title)
+//         formattedQueries.title = { $regex: queries.title, $options: 'i' };
+
+//     let queryCommand = Product.find(formattedQueries);
+//     // Sorting
+//     //acb,efg => [abc,efg] => abc efg
+//     if (req.query.sort) {
+//         const sortBy = await req.query.sort.split(',').join(' ');
+//         console.log(sortBy);
+//         queryCommand = queryCommand.sort(sortBy);
+//     }
+//     //Execute query
+//     //Số lượng sản phẩm thỏa điều kiện !== số lượng sp trả về 1 lần gọi API
+//     queryCommand.exec(async (err, response) => {
+//         if (err) throw new Error(err.message);
+//         // Get counts using a separate query
+//         const counts = await Product.countDocuments(formattedQueries);
+
+//         // Respond with the data
+//         return res.status(200).json({
+//             success: response ? true : false,
+//             products: response ? response : 'Cannot get products',
+//             counts,
+//         });
+//     });
+// });
 const getProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find();
-    return res.status(200).json({
-        success: products ? true : false,
-        productDatas: products ? products : 'Cannot get products',
-    });
+    const queries = { ...req.query };
+    const excludeFields = ['limit', 'sort', 'page', 'fields'];
+    excludeFields.forEach((el) => delete queries[el]);
+
+    let queryString = JSON.stringify(queries);
+    queryString = queryString.replace(
+        /\b(gte|gt|lt|lte)\b/g,
+        (matchedEl) => `$${matchedEl}`
+    );
+    const formattedQueries = JSON.parse(queryString);
+
+    // Filtering
+    if (queries?.title)
+        formattedQueries.title = { $regex: queries.title, $options: 'i' };
+
+    // Create a copy of the formatted queries for counting
+    const countQueries = { ...formattedQueries };
+
+    let queryCommand = Product.find(formattedQueries);
+
+    // Sorting
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        queryCommand = queryCommand.sort(sortBy);
+    }
+    // Fields limiting
+    if (req.query.fields) {
+        const fields = req.query.fields.split(',').join(' ');
+        queryCommand = queryCommand.select(fields);
+    }
+    // Pagination
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || process.env.LIMIT_PRODUCTS;
+    const skip = (page - 1) * limit;
+    queryCommand.skip(skip).limit(limit);
+
+    try {
+        // Execute query and get counts using a separate query
+        const [response, counts] = await Promise.all([
+            queryCommand,
+            Product.countDocuments(countQueries),
+        ]);
+
+        // Respond with the data
+        return res.status(200).json({
+            success: response ? true : false,
+            counts,
+            products: response ? response : 'Cannot get products',
+        });
+    } catch (err) {
+        // Handle errors
+        throw new Error(err.message);
+    }
 });
 
 const updateProduct = asyncHandler(async (req, res) => {
@@ -52,6 +140,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
             : 'Cannot delete product',
     });
 });
+const ratings = asyncHandler(() => {});
 
 module.exports = {
     createProduct,
@@ -59,4 +148,5 @@ module.exports = {
     getProducts,
     updateProduct,
     deleteProduct,
+    ratings,
 };
