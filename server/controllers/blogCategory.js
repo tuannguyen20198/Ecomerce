@@ -5,16 +5,14 @@ const createCategory = asyncHandler(async (req, res) => {
     const response = await BlogCategory.create(req.body);
     return res.json({
         success: response ? true : false,
-        createCategory: response
-            ? response
-            : 'Cannot create new product-category',
+        createCategory: response ? response : 'Cannot create new blog-category',
     });
 });
 const getCategories = asyncHandler(async (req, res) => {
     const response = await BlogCategory.find().select('title _id');
     return res.json({
         success: response ? true : false,
-        blogCategories: response ? response : 'Cannot get new product-category',
+        blogCategories: response ? response : 'Cannot get new blog-category',
     });
 });
 const updateCategory = asyncHandler(async (req, res) => {
@@ -26,7 +24,7 @@ const updateCategory = asyncHandler(async (req, res) => {
         success: response ? true : false,
         updatedCategory: response
             ? response
-            : 'Cannot update new product-category',
+            : 'Cannot update new blog-category',
     });
 });
 const deleteCategory = asyncHandler(async (req, res) => {
@@ -36,7 +34,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
         success: response ? true : false,
         deletedCategory: response
             ? response
-            : 'Cannot delete new product-category',
+            : 'Cannot delete new blog-category',
     });
 });
 
