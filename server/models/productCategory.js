@@ -9,6 +9,10 @@ var productCaregorySchema = new mongoose.Schema(
             unique: true,
             index: true,
         },
+        brand: {
+            type: Array,
+            required: true,
+        },
     },
     {
         timeseries: true,
