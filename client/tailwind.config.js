@@ -2,6 +2,9 @@
 module.exports = {
   content: ["./src/**/*.{html,js}", "./pblic/idex.html"],
   theme: {
+    fontFamily: {
+      main: ["Poppins", "sans-serif;"],
+    },
     extend: {
       width: {
         main: "1220px",
