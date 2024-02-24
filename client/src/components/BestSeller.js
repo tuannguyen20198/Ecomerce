@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { apiGetProducts } from "../apis/product";
+import Slider from "react-slick";
+import Product from "./Product";
 
 const tabs = [
   { id: 1, name: "best seller" },
   { id: 2, name: "new arrivals" },
   //   { id: 3, name: "tablets" },
 ];
+var settings = {
+  dots: false,
+  infinite: false,
+  speed: 500,
+  slidesToShow: 3,
+  slidesToScroll: 1,
+};
 const BestSeller = () => {
   const [bestSellers, setBestSellers] = useState(null);
   const [newProducts, setNewProducts] = useState(null);
@@ -30,13 +39,20 @@ const BestSeller = () => {
           <span
             key={el.id}
             className={`font-semibold capitalize border-r text-gray-400 cursor-pointer  ${
-              activeTab === el.id ? "text-black" : ""
+              activeTab === el.id ? "text-gray-950" : ""
             }`}
             onClick={() => setActiveTab(el.id)}
           >
             {el.name}
           </span>
         ))}
+      </div>
+      <div className="mt-4">
+        <Slider {...settings}>
+          {bestSellers?.map((el) => (
+            <Product key={el.id} productData={el} />
+          ))}
+        </Slider>
       </div>
     </div>
   );
