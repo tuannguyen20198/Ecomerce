@@ -20,6 +20,7 @@ const fn = async (product) => {
         sold: Math.round(Math.random() * 100),
         images: product?.images,
         color: product?.variats?.find((el) => el.label === 'Color')?.variats[0],
+        thumb: product?.thumb,
     });
 };
 const fn2 = async (cate) => {
