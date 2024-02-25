@@ -1,41 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import { fortmatMoney } from "../ultils/helpers";
-import label from "../assets/label.png";
-import labelBue from "../assets/label-blue.png";
+import trending from "../assets/trending.png";
+import label from "../assets/new.png";
+import { renderStarFromNumber } from "../ultils/helpers";
+import SelectOption from "./SelectOption";
+import icons from "../ultils/icons";
 
+const { AiFillEye, AiOutlineMenu, BsFillSuitHeartFill } = icons;
 const Product = ({ productData, isNew }) => {
-  console.log(productData);
+  const [isShowOption, setIsShowOption] = useState(false);
   return (
-    <div className="w-full text-[12px] px-[10px]">
+    <div className="w-full text-base px-[10px]">
       <div className="w-full border p-[15px] flex flex-col items-center">
-        <div className="w-full relative">
+        <div
+          className="w-full relative"
+          onMouseEnter={(e) => {
+            e.stopPropagation();
+            setIsShowOption(true);
+          }}
+          onMouseLeave={(e) => {
+            e.stopPropagation();
+            setIsShowOption(false);
+          }}
+        >
+          {isShowOption && (
+            <div className="absolute bottom-[-10px] left-0 right-0 flex justify-center gap-2 animate-slide-top">
+              <SelectOption icon={<AiFillEye />} />
+              <SelectOption icon={<AiOutlineMenu />} />
+              <SelectOption icon={<BsFillSuitHeartFill />} />
+            </div>
+          )}
           <img
             src={
               productData?.thumb ||
               "https://kubalubra.is/wp-content/uploads/2017/11/default-thumbnail.jpg"
             }
             alt=""
-            className="w-[243px] h-[243ox] object-cover"
+            className="w-[274px] h-[274px] object-cover"
           />
           <img
-            src={isNew ? label : labelBue}
+            src={isNew ? label : trending}
             alt=""
-            className={`absolute top-[-20px] left-[-23px] ${
-              isNew ? "w-[100px]" : "w-[90px]"
-            }  h-[35px] object-cover`}
+            className={`absolute w-[100px] h-[35px] top-[0] right-[0] object-cover`}
           />
-
-          {isNew ? (
-            <span className="font-bold top-[-10px] left-[-10px] text-white absolute">
-              New
-            </span>
-          ) : (
-            <span className="font-bold top-[-10px] left-[-10px] text-white absolute">
-              Trending
-            </span>
-          )}
         </div>
         <div className="flex flex-col mt-[15px] justify-start items-start gap-1 w-full">
+          <span className="flex h-4">
+            {renderStarFromNumber(productData?.totalRatings)}
+          </span>
           <span className="line-clamp-1">{productData?.title}</span>
           <span>{`${fortmatMoney(productData?.price)} VNĐ`}</span>
         </div>

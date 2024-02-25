@@ -3,3 +3,4 @@ export { default as Banner } from "./Banner";
 export { default as Navigation } from "./Navigation";
 export { default as Sidebar } from "./Sidebar";
 export { default as BestSeller } from "./BestSeller";
+export { default as SelectOption } from "./SelectOption";

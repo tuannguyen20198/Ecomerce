@@ -28,6 +28,6 @@ export const appSlice = createSlice({
   },
 });
 
-export const { logout } = appSlice.actions;
+// export const { logout } = appSlice.actions;
 
 export default appSlice.reducer;
